@@ -2,13 +2,15 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { Home, FileText, Bell, User, PlusCircle } from "lucide-react";
 import { useStore } from "@/lib/store";
 
-const items = [
+type NavItem = { to: "/home" | "/my-reports" | "/report" | "/notifications" | "/profile"; label: string; icon: typeof Home; primary?: boolean };
+
+const items: NavItem[] = [
   { to: "/home", label: "Beranda", icon: Home },
   { to: "/my-reports", label: "Laporan", icon: FileText },
   { to: "/report", label: "Lapor", icon: PlusCircle, primary: true },
   { to: "/notifications", label: "Notifikasi", icon: Bell },
   { to: "/profile", label: "Profil", icon: User },
-] as const;
+];
 
 export function BottomNav() {
   const { pathname } = useLocation();
