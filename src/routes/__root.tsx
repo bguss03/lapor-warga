@@ -82,9 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "theme-color", content: "#1f7a8c" },
       { title: "LaporWarga — Sistem Aplikasi Lapor Warga" },
       { name: "description", content: "Sampaikan laporan warga seputar infrastruktur, lingkungan, dan ketertiban dengan cepat dan transparan." },
-      { property: "og:title", content: "LaporWarga" },
-      { property: "og:description", content: "Sistem Aplikasi Lapor Warga — cepat, mudah, transparan." },
+      { property: "og:title", content: "LaporWarga — Sistem Aplikasi Lapor Warga" },
+      { property: "og:description", content: "Sampaikan laporan warga seputar infrastruktur, lingkungan, dan ketertiban dengan cepat dan transparan." },
       { property: "og:type", content: "website" },
+      { name: "twitter:title", content: "LaporWarga — Sistem Aplikasi Lapor Warga" },
+      { name: "twitter:description", content: "Sampaikan laporan warga seputar infrastruktur, lingkungan, dan ketertiban dengan cepat dan transparan." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1477fbc9-ae89-4991-a706-bf6ae7ad4450/id-preview-8edfdf21--bcfe5fc1-0506-4de2-8cf4-4ff41fc92308.lovable.app-1780564649478.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1477fbc9-ae89-4991-a706-bf6ae7ad4450/id-preview-8edfdf21--bcfe5fc1-0506-4de2-8cf4-4ff41fc92308.lovable.app-1780564649478.png" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       {
