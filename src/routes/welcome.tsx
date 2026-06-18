@@ -15,8 +15,8 @@ function WelcomePage() {
   }, [user, navigate]);
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-[image:var(--gradient-hero)] text-primary-foreground">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,oklch(1_0_0_/_0.15),transparent_60%)]" />
+    <div className="relative flex min-h-screen flex-col bg-(image:--gradient-hero) text-primary-foreground">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,oklch(1_0_0/0.15),transparent_60%)]" />
       <div className="relative flex flex-1 flex-col p-6">
         <div className="flex items-center gap-2 pt-4">
           <div className="grid size-10 place-items-center rounded-2xl bg-white/15 backdrop-blur">
@@ -34,9 +34,21 @@ function WelcomePage() {
           </p>
 
           <div className="mt-10 space-y-3">
-            <Feature icon={<Megaphone className="size-5" />} title="Lapor cepat" desc="Kirim laporan dalam hitungan detik." />
-            <Feature icon={<MapPin className="size-5" />} title="Lokasi akurat" desc="Pin point lokasi kejadian." />
-            <Feature icon={<ShieldCheck className="size-5" />} title="Anonim & aman" desc="Identitas terlindungi bila perlu." />
+            <Feature
+              icon={<Megaphone className="size-5" />}
+              title="Lapor cepat"
+              desc="Kirim laporan dalam hitungan detik."
+            />
+            <Feature
+              icon={<MapPin className="size-5" />}
+              title="Lokasi akurat"
+              desc="Pin point lokasi kejadian."
+            />
+            <Feature
+              icon={<ShieldCheck className="size-5" />}
+              title="Anonim & aman"
+              desc="Identitas terlindungi bila perlu."
+            />
           </div>
         </div>
 
@@ -44,7 +56,7 @@ function WelcomePage() {
           <Link
             to="/auth"
             search={{ mode: "register" }}
-            className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-white text-base font-semibold text-primary shadow-[var(--shadow-elevated)] active:scale-[0.98]"
+            className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-white text-base font-semibold text-primary shadow-elevated active:scale-[0.98]"
           >
             Mulai Sekarang <ArrowRight className="size-5" />
           </Link>

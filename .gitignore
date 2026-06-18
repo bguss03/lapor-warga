@@ -1,3 +1,6 @@
+.env
+.lovable
+
 # Logs
 logs
 *.log

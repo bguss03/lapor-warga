@@ -2,7 +2,12 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { Home, FileText, Bell, User, PlusCircle } from "lucide-react";
 import { useStore } from "@/lib/store";
 
-type NavItem = { to: "/home" | "/my-reports" | "/report" | "/notifications" | "/profile"; label: string; icon: typeof Home; primary?: boolean };
+type NavItem = {
+  to: "/home" | "/my-reports" | "/report" | "/notifications" | "/profile";
+  label: string;
+  icon: typeof Home;
+  primary?: boolean;
+};
 
 const items: NavItem[] = [
   { to: "/home", label: "Beranda", icon: Home },
@@ -18,7 +23,7 @@ export function BottomNav() {
   const unread = notifications.filter((n) => !n.read).length;
 
   return (
-    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-md -translate-x-1/2 border-t border-border bg-card/95 backdrop-blur-xl">
+    <nav className="fixed bottom-0 left-1/2 z-40 w-full max-w-lg -translate-x-1/2 border-t border-border bg-card/95 backdrop-blur-xl">
       <ul className="safe-bottom flex items-end justify-around px-2 pt-1">
         {items.map((item) => {
           const active = pathname === item.to;
@@ -26,11 +31,8 @@ export function BottomNav() {
           if (item.primary) {
             return (
               <li key={item.to} className="-mt-6">
-                <Link
-                  to={item.to}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <span className="grid h-14 w-14 place-items-center rounded-2xl bg-[image:var(--gradient-primary)] text-primary-foreground shadow-[var(--shadow-elevated)] transition active:scale-95">
+                <Link to={item.to} className="flex flex-col items-center gap-1">
+                  <span className="grid h-14 w-14 place-items-center rounded-2xl bg-(image:--gradient-primary) text-primary-foreground shadow-elevated transition active:scale-95">
                     <Icon className="size-7" strokeWidth={2.4} />
                   </span>
                   <span className="text-[10px] font-semibold text-foreground">{item.label}</span>

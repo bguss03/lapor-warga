@@ -46,29 +46,29 @@
 :root {
   --radius: 0.875rem;
 
-  --background: oklch(0.99 0.005 220);
-  --foreground: oklch(0.2 0.04 230);
+  --background: oklch(0.99 0.005 25);
+  --foreground: oklch(0.2 0.04 25);
 
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.04 230);
+  --card-foreground: oklch(0.2 0.04 25);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.04 230);
+  --popover-foreground: oklch(0.2 0.04 25);
 
-  /* Trustworthy teal-blue */
-  --primary: oklch(0.58 0.13 215);
-  --primary-foreground: oklch(0.99 0.005 220);
-  --primary-glow: oklch(0.7 0.14 200);
+  /* Trustworthy red (from UI/UX) */
+  --primary: oklch(0.52 0.18 25);
+  --primary-foreground: oklch(0.99 0.005 25);
+  --primary-glow: oklch(0.65 0.2 30);
 
-  /* Fresh green accent */
-  --secondary: oklch(0.95 0.03 165);
-  --secondary-foreground: oklch(0.35 0.1 165);
+  /* Soft red/rose accent */
+  --secondary: oklch(0.96 0.02 25);
+  --secondary-foreground: oklch(0.45 0.15 25);
 
-  --muted: oklch(0.96 0.01 220);
-  --muted-foreground: oklch(0.5 0.03 230);
+  --muted: oklch(0.96 0.01 25);
+  --muted-foreground: oklch(0.5 0.03 25);
 
-  --accent: oklch(0.68 0.15 165);
-  --accent-foreground: oklch(0.99 0.005 220);
+  --accent: oklch(0.52 0.18 25);
+  --accent-foreground: oklch(0.99 0.005 25);
 
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
@@ -82,33 +82,299 @@
   --info: oklch(0.62 0.14 230);
   --info-foreground: oklch(0.99 0 0);
 
-  --border: oklch(0.92 0.01 220);
-  --input: oklch(0.94 0.01 220);
-  --ring: oklch(0.58 0.13 215);
+  --border: oklch(0.92 0.01 25);
+  --input: oklch(0.94 0.01 25);
+  --ring: oklch(0.52 0.18 25);
 
-  --gradient-primary: linear-gradient(135deg, oklch(0.58 0.13 215), oklch(0.68 0.15 165));
-  --gradient-hero: linear-gradient(160deg, oklch(0.58 0.13 215) 0%, oklch(0.65 0.14 190) 60%, oklch(0.7 0.15 165) 100%);
+  --gradient-primary: linear-gradient(135deg, oklch(0.52 0.18 25), oklch(0.58 0.16 35));
+  --gradient-hero: linear-gradient(
+    160deg,
+    oklch(0.48 0.18 25) 0%,
+    oklch(0.52 0.18 25) 60%,
+    oklch(0.58 0.16 35) 100%
+  );
 
-  --shadow-soft: 0 2px 8px -2px oklch(0.58 0.13 215 / 0.08);
-  --shadow-card: 0 4px 16px -4px oklch(0.4 0.08 220 / 0.12);
-  --shadow-elevated: 0 12px 32px -8px oklch(0.58 0.13 215 / 0.25);
+  --shadow-soft: 0 2px 8px -2px oklch(0.52 0.18 25 / 0.08);
+  --shadow-card: 0 4px 16px -4px oklch(0.4 0.08 25 / 0.12);
+  --shadow-elevated: 0 12px 32px -8px oklch(0.52 0.18 25 / 0.25);
 }
 
 @layer base {
   * {
     border-color: var(--color-border);
   }
-  html, body, #root {
+  html,
+  body,
+  #root {
     height: 100%;
   }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     -webkit-font-smoothing: antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family:
+      "Inter",
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
 }
 
 @utility safe-bottom {
   padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+}
+
+@utility safe-top {
+  padding-top: max(env(safe-area-inset-top), 0.5rem);
+}
+
+/* ===== Camera Capture Component ===== */
+
+.camera-capture-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  background: oklch(0.08 0.01 0);
+  animation: cameraFadeIn 0.25s ease-out;
+}
+
+@keyframes cameraFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.camera-shutter-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 10001;
+  background: white;
+  animation: shutterFlash 0.15s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes shutterFlash {
+  0% { opacity: 0.8; }
+  100% { opacity: 0; }
+}
+
+.camera-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  padding-top: max(env(safe-area-inset-top), 0.75rem);
+  background: oklch(0.08 0.01 0 / 0.9);
+  backdrop-filter: blur(12px);
+}
+
+.camera-title {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: oklch(0.95 0 0);
+  letter-spacing: 0.02em;
+}
+
+.camera-btn-icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: oklch(0.25 0.01 0 / 0.6);
+  color: oklch(0.95 0 0);
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.camera-btn-icon:active {
+  transform: scale(0.9);
+  background: oklch(0.3 0.01 0 / 0.8);
+}
+
+.camera-viewfinder {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.camera-mirrored {
+  transform: scaleX(-1);
+}
+
+.camera-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: oklch(0.08 0.01 0);
+}
+
+.camera-frame {
+  position: absolute;
+  inset: 2rem;
+  border: 2px solid oklch(1 0 0 / 0.2);
+  border-radius: 1.25rem;
+  pointer-events: none;
+}
+
+.camera-frame::before,
+.camera-frame::after {
+  content: "";
+  position: absolute;
+  width: 2rem;
+  height: 2rem;
+  border-color: oklch(1 0 0 / 0.6);
+  border-style: solid;
+  border-width: 0;
+}
+
+.camera-frame::before {
+  top: -1px;
+  left: -1px;
+  border-top-width: 3px;
+  border-left-width: 3px;
+  border-top-left-radius: 1.25rem;
+}
+
+.camera-frame::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom-width: 3px;
+  border-right-width: 3px;
+  border-bottom-right-radius: 1.25rem;
+}
+
+.camera-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: oklch(0.08 0.01 0);
+  color: oklch(0.7 0 0);
+  font-size: 0.8rem;
+}
+
+.camera-spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 3px solid oklch(0.3 0 0);
+  border-top-color: oklch(0.52 0.18 25);
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.camera-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  text-align: center;
+  color: oklch(0.7 0 0);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.camera-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: oklch(0.95 0 0);
+  background: oklch(0.52 0.18 25);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.camera-retry-btn:active {
+  transform: scale(0.95);
+}
+
+.camera-bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1.5rem 1rem;
+  padding-bottom: max(env(safe-area-inset-bottom), 1.5rem);
+  background: oklch(0.08 0.01 0 / 0.9);
+  backdrop-filter: blur(12px);
+}
+
+.camera-shutter-btn {
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: oklch(0.52 0.18 25);
+  color: white;
+  border: 4px solid oklch(0.65 0.12 25 / 0.5);
+  box-shadow: 0 0 0 3px oklch(0.52 0.18 25 / 0.3), 0 4px 16px oklch(0 0 0 / 0.4);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.camera-shutter-btn:active {
+  transform: scale(0.9);
+  box-shadow: 0 0 0 3px oklch(0.52 0.18 25 / 0.5), 0 2px 8px oklch(0 0 0 / 0.3);
+}
+
+.camera-shutter-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.camera-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.75rem 1.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.camera-action-btn:active {
+  transform: scale(0.95);
+}
+
+.camera-action-retake {
+  background: oklch(0.25 0 0);
+  color: oklch(0.85 0 0);
+}
+
+.camera-action-confirm {
+  background: oklch(0.52 0.18 25);
+  color: white;
+  box-shadow: 0 4px 12px oklch(0.52 0.18 25 / 0.4);
 }

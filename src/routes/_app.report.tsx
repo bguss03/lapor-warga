@@ -1,52 +1,109 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowLeft, Camera, MapPin, Send, Check, Upload } from "lucide-react";
+import { useState, useEffect, lazy, Suspense } from "react";
+import { ArrowLeft, Camera, MapPin, Send, Check, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { CATEGORIES, useStore } from "@/lib/store";
+import { useStore } from "@/lib/store";
+import { CategoryIcon, getCategoryIconStyle } from "@/components/CategoryIcon";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CameraCapture } from "@/components/CameraCapture";
+
+const LocationPicker = lazy(() => import("@/components/LocationPicker").then(m => ({ default: m.LocationPicker })));
 
 export const Route = createFileRoute("/_app/report")({
   component: ReportPage,
 });
 
 function ReportPage() {
-  const { addReport } = useStore();
+  const { addReport, categories } = useStore();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
-  const [category, setCategory] = useState<string>("");
+  const [categoryId, setCategoryId] = useState<string>("");
   const [description, setDescription] = useState("");
   const [location, setLocation] = useState("");
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [photo, setPhoto] = useState<string>("");
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [anonymous, setAnonymous] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+    setPhotoFile(f);
     const reader = new FileReader();
     reader.onload = () => setPhoto(reader.result as string);
     reader.readAsDataURL(f);
   };
 
-  const submit = () => {
-    if (!category) return toast.error("Pilih kategori dahulu");
+  const handleCameraCapture = (file: File, dataUrl: string) => {
+    setPhotoFile(file);
+    setPhoto(dataUrl);
+    setShowCamera(false);
+  };
+
+  const handleOpenCamera = () => {
+    // Check if getUserMedia is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error("Kamera tidak didukung di browser ini. Coba gunakan Galeri.");
+      return;
+    }
+    setShowCamera(true);
+  };
+
+  const submit = async () => {
+    if (!categoryId) return toast.error("Pilih kategori dahulu");
     if (description.length < 10) return toast.error("Deskripsi terlalu pendek");
     if (!location) return toast.error("Lokasi belum diisi");
+    
     setSending(true);
-    setTimeout(() => {
-      const r = addReport({ category, description, location, photo, anonymous });
-      toast.success(`Laporan ${r.id} terkirim!`);
+    try {
+      const { data: r, error: dbError } = await addReport({ 
+        category_id: categoryId, 
+        description, 
+        location_address: location, 
+        latitude: coords?.lat,
+        longitude: coords?.lng,
+        photo_url: photo, 
+        photo_file: photoFile,
+        anonymous 
+      });
+      
+      if (r) {
+        toast.success(`Laporan ${r.ticket_number || r.id} terkirim!`);
+        navigate({ to: "/my-reports" });
+      } else {
+        console.error("Database error details:", dbError);
+        const msg = typeof dbError === "string" ? dbError : dbError?.message || "Gagal mengirim laporan";
+        toast.error(`Gagal: ${msg}`);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Terjadi kesalahan sistem.");
+    } finally {
       setSending(false);
-      navigate({ to: "/my-reports" });
-    }, 1200);
+    }
   };
 
   return (
     <div>
+      {/* Camera Overlay */}
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
+
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-card/90 px-4 py-3 backdrop-blur">
         <button
           onClick={() => navigate({ to: "/home" })}
@@ -64,21 +121,29 @@ function ReportPage() {
         {/* Step 1: Category */}
         <Section number={1} title="Pilih Kategori">
           <div className="grid grid-cols-3 gap-3">
-            {CATEGORIES.map((c) => {
-              const active = category === c.id;
+            {categories.map((c) => {
+              const active = categoryId === c.id;
               return (
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => { setCategory(c.id); setStep(2); }}
+                  onClick={() => {
+                    setCategoryId(c.id);
+                    setStep(2);
+                  }}
                   className={`flex flex-col items-center gap-2 rounded-2xl border p-3 transition active:scale-95 ${
                     active
-                      ? "border-primary bg-primary/5 shadow-[var(--shadow-soft)]"
+                      ? "border-primary bg-primary/5 shadow-soft"
                       : "border-border bg-card"
                   }`}
                 >
-                  <span className={`grid size-11 place-items-center rounded-xl text-xl ${c.color}`}>{c.icon}</span>
-                  <span className="text-[11px] font-medium leading-tight">{c.id}</span>
+                  <span
+                    className="grid size-11 place-items-center rounded-xl text-xl"
+                    style={getCategoryIconStyle(c.icon) || undefined}
+                  >
+                    <CategoryIcon icon={c.icon} className="size-6" />
+                  </span>
+                  <span className="text-[11px] font-medium leading-tight">{c.name}</span>
                 </button>
               );
             })}
@@ -99,55 +164,99 @@ function ReportPage() {
 
         {/* Step 3: Photo */}
         <Section number={3} title="Foto / Bukti">
-          <label className="flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted/40 transition hover:border-primary">
-            {photo ? (
+          {photo ? (
+            <div className="relative aspect-video overflow-hidden rounded-2xl border border-border shadow-sm">
               <img src={photo} alt="bukti" className="size-full object-cover" />
-            ) : (
-              <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                <div className="grid size-12 place-items-center rounded-2xl bg-card">
-                  <Upload className="size-5 text-primary" />
+              <button 
+                onClick={() => { setPhoto(""); setPhotoFile(null); }}
+                className="absolute right-3 top-3 grid size-8 place-items-center rounded-full bg-destructive text-white shadow-lg active:scale-90 transition"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {/* Camera button — opens WebRTC camera */}
+              <button
+                type="button"
+                onClick={handleOpenCamera}
+                className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/40 p-6 transition hover:border-primary active:bg-primary/5"
+              >
+                <div className="grid size-12 place-items-center rounded-2xl bg-card text-primary shadow-sm">
+                  <Camera className="size-6" />
                 </div>
-                <p className="text-sm font-medium text-foreground">Ambil foto / unggah</p>
-                <p className="text-[11px]">JPG / PNG maks 5MB</p>
+                <div className="text-center">
+                  <p className="text-xs font-bold text-foreground">Kamera</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Ambil Foto</p>
+                </div>
+              </button>
+
+              {/* Gallery button — opens file picker */}
+              <div className="relative">
+                <label 
+                  htmlFor="gallery-input"
+                  className="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/40 p-6 transition hover:border-primary active:bg-primary/5"
+                >
+                  <div className="grid size-12 place-items-center rounded-2xl bg-card text-primary shadow-sm">
+                    <Upload className="size-6" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-foreground">Galeri</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Pilih File</p>
+                  </div>
+                </label>
+                <input
+                  id="gallery-input"
+                  type="file"
+                  accept="image/*"
+                  className="absolute inset-0 size-0 opacity-0"
+                  onChange={onFile}
+                />
               </div>
-            )}
-            <input type="file" accept="image/*" capture="environment" className="hidden" onChange={onFile} />
-          </label>
-          {photo && (
-            <button onClick={() => setPhoto("")} className="text-xs font-medium text-destructive">
-              Hapus foto
-            </button>
+            </div>
           )}
+          <p className="mt-2 text-[10px] text-center text-muted-foreground">
+            Lampirkan foto kejadian yang jelas sebagai bukti laporan.
+          </p>
         </Section>
 
         {/* Step 4: Location */}
         <Section number={4} title="Lokasi Kejadian">
-          <div className="overflow-hidden rounded-2xl border border-border bg-card">
-            <div className="relative grid h-28 place-items-center bg-[linear-gradient(135deg,oklch(0.92_0.04_215),oklch(0.94_0.04_165))]">
-              <div className="absolute inset-0 opacity-30 [background:repeating-linear-gradient(0deg,transparent_0_19px,oklch(0.5_0.05_220_/_0.2)_19px_20px),repeating-linear-gradient(90deg,transparent_0_19px,oklch(0.5_0.05_220_/_0.2)_19px_20px)]" />
-              <div className="relative flex flex-col items-center">
-                <MapPin className="size-7 text-destructive drop-shadow" strokeWidth={2.5} />
-                <span className="mt-1 rounded-full bg-card/90 px-2 py-0.5 text-[10px] font-medium">Pin di sini</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 p-3">
-              <MapPin className="size-4 text-muted-foreground" />
-              <Input
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Contoh: Jl. Melati No. 23, RT 02"
-                className="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+          {isClient ? (
+            <Suspense fallback={<div className="h-64 animate-pulse rounded-2xl bg-muted" />}>
+              <LocationPicker
+                onLocationSelect={(lat, lng, addr) => {
+                  setCoords({ lat, lng });
+                  setLocation(addr);
+                }}
               />
-            </div>
+            </Suspense>
+          ) : (
+            <div className="h-64 animate-pulse rounded-2xl bg-muted" />
+          )}
+          <div className="flex items-center gap-2 rounded-2xl border border-border bg-card p-3">
+            <MapPin className="size-4 text-muted-foreground" />
+            <Input
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Contoh: Jl. Melati No. 23, RT 02"
+              className="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+            />
           </div>
         </Section>
 
         {/* Anonymous */}
         <label className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4">
-          <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(!!v)} className="mt-0.5" />
+          <Checkbox
+            checked={anonymous}
+            onCheckedChange={(v) => setAnonymous(!!v)}
+            className="mt-0.5"
+          />
           <div>
             <p className="text-sm font-semibold">Laporkan secara Anonim</p>
-            <p className="text-xs text-muted-foreground">Nama Anda tidak akan ditampilkan ke publik.</p>
+            <p className="text-xs text-muted-foreground">
+              Nama Anda tidak akan ditampilkan ke publik.
+            </p>
           </div>
         </label>
 
@@ -158,17 +267,31 @@ function ReportPage() {
               Mengirim...
             </span>
           ) : (
-            <span className="flex items-center gap-2"><Send className="size-4" /> Kirim Laporan</span>
+            <span className="flex items-center gap-2">
+              <Send className="size-4" /> Kirim Laporan
+            </span>
           )}
         </Button>
       </div>
       {/* unused vars referenced for linter */}
-      <span className="hidden">{step}<Camera /><Check /></span>
+      <span className="hidden">
+        {step}
+        <Camera />
+        <Check />
+      </span>
     </div>
   );
 }
 
-function Section({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
+function Section({
+  number,
+  title,
+  children,
+}: {
+  number: number;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2">
@@ -181,3 +304,4 @@ function Section({ number, title, children }: { number: number; title: string; c
     </section>
   );
 }
+
